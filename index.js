@@ -11,7 +11,7 @@ const fsClose = util.promisify(fs.close);
 
 const args = process.argv.slice(2) || process.exit(1)
 
-const run = async (link) => {
+const run = async (link, pdfname) => {
   
   const browser = await firefox.launch();
 
@@ -77,7 +77,7 @@ const run = async (link) => {
 
   console.log('Saving slides to PDF.');
   const pdfBytes = await pdfDoc.save();
-  await saveFile('slides/slides.pdf', pdfBytes);
+  await saveFile(`slides/${pdfname}`, pdfBytes);
 }
 
 
