@@ -12,7 +12,7 @@ $ node index.js <SLIDES.COM LINK> <NAME OF TARGET-PDF FILE>
 i.e.
 
 ```sh
-$ node index.js https://slides.com/chrisoncode/8-things-nerds-need-to-know things-to-know.pdf
+$ node index.js https://slides.com/lucianomammino/your-lambdas-in-rust-codemotion-milan-2023 your-lambdas-in-rust.pdf
 ```
 
 Each slide will be saved as PNG format into the `slides/png/` folder. 
