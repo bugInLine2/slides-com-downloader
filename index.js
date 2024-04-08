@@ -8,11 +8,13 @@ var sizeOf = require('image-size');
 const fsOpen = util.promisify(fs.open);
 const fsWriteFile = util.promisify(fs.writeFile);
 const fsClose = util.promisify(fs.close);
+const TIMEOUT = 180000;
 
-const args = process.argv.slice(2) || process.exit(1)
-
+const args = process.argv.slice(2) || process.exit(1);
 const run = async (link, pdfname) => {
-  
+  const linkElements = link.split('?');
+  link = `${linkElements[0]}/fullscreen` + ( linkElements.length > 1 ? `?${linkElements[1]}` : '' );
+
   const browser = await firefox.launch();
 
   // Get number of mainslides
@@ -28,6 +30,10 @@ const run = async (link, pdfname) => {
   const loadSubSlides = async (slide) => {
     const urlMainSlide = `${rootUrl}${slide+1}`;
     const urlSubMax = `${rootUrl}${slide+1}/1000`;
+
+    // Starting threads some seconds apart
+    const rand = Math.floor((Math.random()+0.3) * 30)+1;
+    await sleep(rand*1000);
 
     const subLoadObj = await load(urlSubMax, browser);
 
@@ -48,6 +54,10 @@ const run = async (link, pdfname) => {
   const makeScreenshots = async (i) => {
     const mainSlide = i+1;
     const numberSubSlides = subSlides[i];
+
+    // Starting threads some seconds apart
+    const rand = Math.floor((Math.random()+0.3) * 30)+1;
+    await sleep(rand*1000);
 
     console.info(`Downloading main slide: #${mainSlide}`);
     await loadScreenShot(`${rootUrl}${mainSlide}`, `slides/pngs/${mainSlide}.png`, browser);
@@ -113,8 +123,8 @@ async function load(url, browser) {
   console.log('Getting number of slides by calling URL ' + url);
   const page = await browser.newPage();
 
-  await page.goto(url);
-  await page.waitForSelector('.present');
+  await page.goto(url, {timeout: TIMEOUT});
+  await page.waitForSelector('.present', {timeout: TIMEOUT});
 
   const redirectedUrl = page.url();
   const slides = redirectedUrl.substring(redirectedUrl.lastIndexOf('/') + 1);
@@ -125,9 +135,9 @@ async function load(url, browser) {
 
 async function loadScreenShot(url, filename, browser){
   const page = await browser.newPage();
-  await page.goto(url);
-  await page.waitForSelector('.present');
-  await page.screenshot({ path: filename });
+  await page.goto(url, {timeout: TIMEOUT});
+  await page.waitForSelector('.present', {timeout: TIMEOUT});
+  await page.screenshot({ path: filename, timeout: TIMEOUT });
   page.close();
 }
 
@@ -162,6 +172,10 @@ async function saveFile(path, data) {
     resolve('File created');
   }));
 };
+
+function sleep(milliseconds) {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
 
 checkDownloadFolder()
 
