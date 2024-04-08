@@ -49,30 +49,38 @@ const run = async (link, pdfname) => {
   }
   await Promise.all(mainLoops.map(loadSubSlides));
 
+
+  // Make Screenshot of cover slide
+  console.info(`Downloading cover`);
+  await loadScreenShot(`${link}`, `slides/pngs/cover.png`, browser);
+
   // Make Screenshots of each mainslide with every subslide
   const subLoops = R.range(0, Number(subSlides.length));
   const makeScreenshots = async (i) => {
-    const mainSlide = i+1;
-    const numberSubSlides = subSlides[i];
-
-    // Starting threads some seconds apart
-    const rand = Math.floor((Math.random()+0.3) * 30)+1;
-    await sleep(rand*1000);
-
-    console.info(`Downloading main slide: #${mainSlide}`);
-    await loadScreenShot(`${rootUrl}${mainSlide}`, `slides/pngs/${mainSlide}.png`, browser);
-
-    if(numberSubSlides > 0){
-      for(let j=1; j<=numberSubSlides; j++){
-        console.info(`Downloading subslide #${j} for main slide: #${mainSlide}`);
-        await loadScreenShot(`${rootUrl}${mainSlide}/${j}`, `slides/pngs/${mainSlide}_${j}.png`, browser);
+      const mainSlide = i+1;
+      const numberSubSlides = subSlides[i];
+  
+      // Starting threads some seconds apart
+      const rand = Math.floor((Math.random()+0.3) * 30)+1;
+      await sleep(rand*1000);
+  
+      console.info(`Downloading main slide: #${mainSlide}`);
+      await loadScreenShot(`${rootUrl}${mainSlide}`, `slides/pngs/${mainSlide}.png`, browser);
+  
+      if(numberSubSlides > 0){
+        for(let j=1; j<=numberSubSlides; j++){
+          console.info(`Downloading subslide #${j} for main slide: #${mainSlide}`);
+          await loadScreenShot(`${rootUrl}${mainSlide}/${j}`, `slides/pngs/${mainSlide}_${j}.png`, browser);
+        }
       }
-    }
   }
   await Promise.all(subLoops.map(makeScreenshots));
 
   // Save all slide images into a PDF
   const pdfDoc = await PDFDocument.create();
+
+  addPageToPdf('slides/pngs/cover.png', pdfDoc);
+
   for(let i=0; i<subSlides.length; i++){
     let path = `slides/pngs/${i+1}.png`;
     addPageToPdf(path, pdfDoc);
@@ -93,16 +101,12 @@ const run = async (link, pdfname) => {
 
 
 const checkDownloadFolder = async () => {
-  if (!fs.existsSync('slides/')) {
-    fs.mkdirSync('slides/');
-    fs.mkdirSync('slides/pngs');
-    fs.rem
-  } else {
-    fs.readdirSync('slides/pngs').forEach(f => fs.rmSync(`slides/pngs/${f}`));
-    if (fs.existsSync('slides/slides.pdf')) {
-      fs.unlinkSync('slides/slides.pdf');
-    }
+  if (fs.existsSync('slides/')) {
+    fs.rmSync('slides/', {recursive: true});
   }
+
+  fs.mkdirSync('slides/');
+  fs.mkdirSync('slides/pngs');
 }
 
 async function addPageToPdf(path, pdfDoc){
